@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Non-Invasive Anemia Detection & Prediagnosis Using Arduino</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- ===== CSS SECTION ===== -->
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-light: #dbeafe;
+      --danger: #dc2626;
+      --warning: #f97316;
+      --success: #16a34a;
+      --bg: #f3f4f6;
+      --card-bg: #ffffff;
+      --text-main: #111827;
+      --text-muted: #6b7280;
+      --border: #e5e7eb;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #e0f2fe 0, #f3f4f6 45%, #f9fafb 100%);
+      color: var(--text-main);
+      min-height: 100vh;
+    }
+
+    .page {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 24px 16px 40px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+      color: #0f172a;
+    }
+
+    header p {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .tagline {
+      margin-top: 4px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.5fr) minmax(0, 1.2fr);
+      gap: 16px;
+    }
+
+    @media (max-width: 800px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 16px 16px 18px;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+      border: 1px solid rgba(148, 163, 184, 0.4);
+    }
+
+    .card h2 {
+      font-size: 1.05rem;
+      margin-bottom: 8px;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card h2 span.icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      background: var(--primary-light);
+      color: var(--primary);
+      font-size: 0.9rem;
+    }
+
+    .card-subtitle {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    .values-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .value-item {
+      background: #f9fafb;
+      border-radius: 8px;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+    }
+
+    .value-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+    }
+
+    .value-main {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #111827;
+    }
+
+    .value-unit {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-left: 4px;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 9px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    .status-normal {
+      background: #dcfce7;
+      color: var(--success);
+    }
+
+    .status-mild,
+    .status-moderate {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .status-severe {
+      background: #fee2e2;
+      color: var(--danger);
+    }
+
+    .status-none {
+      background: #e5e7eb;
+      color: #374151;
+    }
+
+    .instruction-text {
+      font-size: 0.9rem;
+      line-height: 1.5;
+      color: #111827;
+      margin-top: 4px;
+    }
+
+    .instruction-note {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 10px 0 8px;
+    }
+
+    .small-note {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    .form-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 6px;
+      gap: 8px;
+    }
+
+    .form-label {
+      flex: 0 0 80px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .form-input {
+      flex: 1;
+      padding: 6px 8px;
+      font-size: 0.8rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      outline: none;
+    }
+
+    .form-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 1px var(--primary-light);
+    }
+
+    .report-field {
+      font-size: 0.85rem;
+      margin-bottom: 5px;
+    }
+
+    .report-label {
+      font-weight: 500;
+      color: #374151;
+    }
+
+    .report-value {
+      margin-left: 4px;
+      color: #111827;
+    }
+
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 999px;
+      padding: 7px 14px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #f9fafb;
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--primary);
+      color: var(--primary);
+    }
+
+    .timestamp {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .error-text {
+      font-size: 0.8rem;
+      color: var(--danger);
+      margin-top: 4px;
+    }
+
+    /* For printing: hide input boxes, show plain text. */
+    .patient-print {
+      display: none;
+      font-size: 0.85rem;
+      color: #111827;
+      margin-bottom: 5px;
+    }
+
+    @media print {
+      body {
+        background: #ffffff;
+      }
+      header,
+      .no-print {
+        display: none !important;
+      }
+      .page {
+        padding: 8px;
+      }
+      .card {
+        box-shadow: none;
+        border: 1px solid #000;
+      }
+      #patientName,
+      #patientAge {
+        display: none;
+      }
+      .patient-print {
+        display: block;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <header class="no-print">
+      <h1>Non-Invasive Anemia Detection & Prediagnosis Using Arduino</h1>
+      <p>Screening portal for hemoglobin, temperature, and anemia status</p>
+      <p class="tagline">Latest non-invasive screening measurement.</p>
+    </header>
+
+    <div class="layout">
+      <!-- LEFT: live data -->
+      <section class="card">
+        <h2><span class="icon">📊</span> Latest Screening Result</h2>
+        <p class="card-subtitle">Automatically shows the latest stored screening values.</p>
+
+        <div class="values-grid">
+          <div class="value-item">
+            <div class="value-label">Hemoglobin</div>
+            <div class="value-main">
+              <span id="hbValue">--</span>
+              <span class="value-unit">g/dL</span>
+            </div>
+          </div>
+          <div class="value-item">
+            <div class="value-label">Temperature</div>
+            <div class="value-main">
+              <span id="tempValue">--</span>
+              <span class="value-unit">°C</span>
+            </div>
+          </div>
+          <div class="value-item">
+            <div class="value-label">Gender</div>
+            <div class="value-main">
+              <span id="genderValue">--</span>
+            </div>
+          </div>
+          <div class="value-item">
+            <div class="value-label">Anemia status</div>
+            <div class="value-main">
+              <span id="statusPill" class="status-pill status-none">No data</span>
+            </div>
+          </div>
+        </div>
+
+        <p class="timestamp" id="timestampText">Last update: --</p>
+        <p class="error-text" id="errorText" style="display:none;">Error fetching data. Please check internet and credentials.</p>
+
+        <div class="divider"></div>
+
+        <h2><span class="icon">📌</span> Instructions to Patient (Prediagnosis)</h2>
+        <div id="instructionText" class="instruction-text">
+          Loading instructions from latest Hb and temperature values…
+        </div>
+        <p class="instruction-note">
+          This section provides general screening guidance only. It does not replace professional medical advice or laboratory diagnosis.
+        </p>
+
+        <div class="btn-row no-print">
+          <button class="btn btn-primary" onclick="loadData()">🔄 Refresh values</button>
+        </div>
+      </section>
+
+      <!-- RIGHT: report -->
+      <section class="card">
+        <h2><span class="icon">🧾</span> Printable Screening Report</h2>
+        <p class="card-subtitle">Fill patient details; values auto‑fill from the latest screening data.</p>
+
+        <!-- On-screen inputs -->
+        <div class="form-row no-print">
+          <label class="form-label" for="patientName">Name</label>
+          <input id="patientName" class="form-input" type="text" placeholder="Patient full name" oninput="syncPatientPrint()">
+        </div>
+        <div class="form-row no-print">
+          <label class="form-label" for="patientAge">Age</label>
+          <input id="patientAge" class="form-input" type="number" min="0" placeholder="Years" oninput="syncPatientPrint()">
+        </div>
+
+        <!-- Print-only text -->
+        <div class="patient-print">
+          <span class="report-label">Name:</span>
+          <span id="printName" class="report-value"></span>
+        </div>
+        <div class="patient-print">
+          <span class="report-label">Age:</span>
+          <span id="printAge" class="report-value"></span>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="report-field">
+          <span class="report-label">Gender:</span>
+          <span id="repGender" class="report-value">--</span>
+        </div>
+        <div class="report-field">
+          <span class="report-label">Hemoglobin:</span>
+          <span id="repHb" class="report-value">--</span>
+          <span class="value-unit">g/dL</span>
+        </div>
+        <div class="report-field">
+          <span class="report-label">Temperature:</span>
+          <span id="repTemp" class="report-value">--</span>
+          <span class="value-unit">°C</span>
+        </div>
+        <div class="report-field">
+          <span class="report-label">Anemia status:</span>
+          <span id="repStatus" class="report-value">--</span>
+        </div>
+        <div class="report-field">
+          <span class="report-label">Remarks:</span>
+          <span id="repRemarks" class="report-value">--</span>
+        </div>
+        <div class="report-field">
+          <span class="report-label">Measurement time:</span>
+          <span id="repDateTime" class="report-value">--</span>
+        </div>
+        <div class="small-note">
+          Device: Non-Invasive Anemia Detection and Prediagnosis System. This is a screening report; confirm with clinical evaluation and lab tests.
+        </div>
+
+        <div class="btn-row no-print">
+          <button class="btn btn-primary" onclick="window.print()">🖨 Print / Save PDF</button>
+          <button class="btn btn-outline" onclick="clearPatientFields()">Clear patient fields</button>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- ===== JAVASCRIPT SECTION ===== -->
+  <script>
+    const CHANNEL_ID = 3141619;
+    const READ_API_KEY = 'VHJ92WQ5HGR1FAHZ';
+
+    const FIELD_HB = 'field1';
+    const FIELD_TEMP = 'field2';
+    const FIELD_GENDER = 'field3';
+
+    function buildUrl() {
+      return `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?api_key=${READ_API_KEY}&results=1`;
+    }
+
+    function classifyAnemia(hb, gender) {
+      if (isNaN(hb)) {
+        return { status: 'No data', code: 'none' };
+      } else if (hb < 7) {
+        return { status: 'Severe anemia', code: 'severe' };
+      } else if (hb >= 7 && hb < 10) {
+        return { status: 'Moderate anemia', code: 'moderate' };
+      } else if (hb >= 10 && hb < 12) {
+        return { status: 'Mild anemia', code: 'mild' };
+      } else {
+        return { status: 'Normal', code: 'normal' };
+      }
+    }
+
+    // Now 4 bullet instructions per category
+    function buildInstruction(hb, temp, gender) {
+      const points = [];
+
+      if (isNaN(hb)) {
+        points.push('Repeat the non-invasive test to obtain a valid hemoglobin reading.');
+        points.push('If you feel very weak, dizzy, or breathless, visit a nearby clinic or hospital for evaluation.');
+        points.push('Do not ignore persistent symptoms or sudden worsening; seek timely medical advice.');
+        points.push('If repeated screening fails, get a direct laboratory hemoglobin test done.');
+        return points;
+      }
+
+      if (hb < 7) {
+        points.push('This screening result suggests severe anemia. Visit a hospital or qualified doctor immediately for full evaluation and treatment.');
+        points.push('Do not ignore symptoms like extreme tiredness, breathlessness, chest pain, or dizziness; seek emergency care if they are present.');
+        points.push('Avoid heavy physical work or strenuous exercise until a doctor has properly evaluated your condition.');
+        points.push('A laboratory blood test is required to confirm hemoglobin level and to start appropriate treatment as soon as possible.');
+      } else if (hb >= 7 && hb < 10) {
+        points.push('This screening result suggests moderate anemia. Please consult a doctor soon for detailed evaluation.');
+        points.push('Get a laboratory hemoglobin test and other investigations as advised to confirm the diagnosis.');
+        points.push('Include iron-rich foods daily, such as green leafy vegetables, pulses, beans, jaggery, and, if non-vegetarian, meat or fish.');
+        points.push('Take any iron or vitamin supplements only under medical supervision, not on your own.');
+      } else if (hb >= 10 && hb < 12) {
+        points.push('This screening result suggests mild anemia. Plan a routine visit to your doctor for advice and possible blood tests.');
+        points.push('Improve diet with iron‑rich foods (leafy vegetables, legumes, nuts, seeds, fortified cereals) and vitamin‑C‑rich fruits to enhance absorption.');
+        points.push('Avoid drinking strong tea or coffee with meals, as they can reduce iron absorption; keep at least a 1–2 hour gap.');
+        points.push('Monitor for symptoms such as tiredness or reduced exercise capacity, and report them to your doctor if they persist.');
+      } else {
+        points.push('This screening result suggests hemoglobin within the usual range for most adults. Maintain your current healthy habits.');
+        points.push('Follow a balanced diet that includes vegetables, fruits, whole grains, pulses, and adequate protein.');
+        points.push('If you develop symptoms like persistent fatigue, breathlessness, or paleness, still consult a doctor even if the screening seems normal.');
+        points.push('For people with chronic illnesses, pregnancy, or other risk factors, regular medical check-ups and lab tests are important.');
+      }
+
+      if (!isNaN(temp) && temp >= 37.5) {
+        points.push('Recorded temperature is high. If you have fever, chills, body pain, or feel very unwell, consult a doctor or hospital promptly.');
+      }
+
+      return points;
+    }
+
+    function formatTimestamp(isoString) {
+      if (!isoString) return '--';
+      try {
+        const d = new Date(isoString);
+        if (isNaN(d.getTime())) return isoString;
+        return d.toLocaleString();
+      } catch {
+        return isoString;
+      }
+    }
+
+    function updateStatusPill(code, text) {
+      const pill = document.getElementById('statusPill');
+      pill.textContent = text;
+
+      pill.className = 'status-pill';
+      if (code === 'normal') pill.classList.add('status-normal');
+      else if (code === 'mild') pill.classList.add('status-mild');
+      else if (code === 'moderate') pill.classList.add('status-moderate');
+      else if (code === 'severe') pill.classList.add('status-severe');
+      else pill.classList.add('status-none');
+    }
+
+    function clearPatientFields() {
+      document.getElementById('patientName').value = '';
+      document.getElementById('patientAge').value = '';
+      syncPatientPrint();
+    }
+
+    function syncPatientPrint() {
+      document.getElementById('printName').textContent = document.getElementById('patientName').value || '';
+      document.getElementById('printAge').textContent = document.getElementById('patientAge').value || '';
+    }
+
+    async function loadData() {
+      const url = buildUrl();
+      const errorEl = document.getElementById('errorText');
+      errorEl.style.display = 'none';
+
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+
+        const feed = (data.feeds && data.feeds[0]) || null;
+        if (!feed) throw new Error('No feeds in channel');
+
+        const hb = parseFloat(feed[FIELD_HB]);
+        const temp = parseFloat(feed[FIELD_TEMP]);
+        let genderRaw = (feed[FIELD_GENDER] || '').trim();
+        const ts = feed.created_at || '';
+
+        if (genderRaw === '0') genderRaw = 'Male';
+        else if (genderRaw === '1') genderRaw = 'Female';
+
+        document.getElementById('hbValue').textContent = isNaN(hb) ? '--' : hb.toFixed(1);
+        document.getElementById('tempValue').textContent = isNaN(temp) ? '--' : temp.toFixed(1);
+        document.getElementById('genderValue').textContent = genderRaw || '--';
+        document.getElementById('timestampText').textContent = 'Last update: ' + formatTimestamp(ts);
+
+        const { status, code } = classifyAnemia(hb, genderRaw);
+        updateStatusPill(code, status);
+
+        const instructionPoints = buildInstruction(hb, temp, genderRaw);
+        const instrEl = document.getElementById('instructionText');
+        instrEl.innerHTML = '';
+        const ul = document.createElement('ul');
+        ul.style.marginLeft = '18px';
+        ul.style.fontSize = '0.9rem';
+        instructionPoints.forEach(pt => {
+          const li = document.createElement('li');
+          li.textContent = pt;
+          li.style.marginBottom = '4px';
+          ul.appendChild(li);
+        });
+        instrEl.appendChild(ul);
+
+        document.getElementById('repGender').textContent = genderRaw || '--';
+        document.getElementById('repHb').textContent = isNaN(hb) ? '--' : hb.toFixed(1);
+        document.getElementById('repTemp').textContent = isNaN(temp) ? '--' : temp.toFixed(1);
+        document.getElementById('repDateTime').textContent = formatTimestamp(ts);
+        document.getElementById('repStatus').textContent = status;
+
+        let remarks = '';
+        if (code === 'none') {
+          remarks = 'Hemoglobin value is not available. Please repeat the screening measurement.';
+        } else if (code === 'severe') {
+          remarks = 'Very low hemoglobin on screening. Immediate medical evaluation is strongly recommended.';
+        } else if (code === 'moderate') {
+          remarks = 'Low hemoglobin on screening. Please consult a doctor and confirm with a laboratory test.';
+        } else if (code === 'mild') {
+          remarks = 'Slight drop in hemoglobin on screening. Dietary improvement and follow-up are advised.';
+        } else if (code === 'normal') {
+          remarks = 'Screening suggests hemoglobin in normal range. Maintain healthy lifestyle and routine check-ups.';
+        }
+
+        if (!isNaN(temp) && temp >= 37.5) {
+          remarks += ' Elevated temperature noted; check for fever or infection and seek medical advice if needed.';
+        }
+
+        document.getElementById('repRemarks').textContent = remarks;
+
+      } catch (err) {
+        console.error('Fetch error:', err);
+        errorEl.textContent = 'Could not fetch data. Check channel ID, Read API key, or network.';
+        errorEl.style.display = 'block';
+      }
+    }
+
+    loadData();
+  </script>
+</body>
+</html>
